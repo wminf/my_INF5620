@@ -30,22 +30,6 @@ def residual_discrete_eq_step1(u):
     return sym.simplify(R)
 
 
-def my_linear():
-    """
-    Convenient symbolic definition of straight line
-    """
-    c, d = sym.symbols('c d')
-    return c*t + d
-
-
-def my_quadratic():
-    """
-    Convenient symbolic definition of quadratic function
-    """
-    c, d, e = sym.symbols('c d e')
-    return c*t**2 + d*t + e
-
-
 def DtDt(u, dt):
     """Return 2nd-order finite difference for u_tt.
     u is a symbolic Python function of t.
@@ -77,8 +61,38 @@ def main(u):
 def linear():
     main(lambda t: V*t + I)
 
+
+def my_linear():
+    """
+    Convenient symbolic definition of straight line
+    """
+    c, d = sym.symbols('c d')
+    return c*t + d
+
+
+def my_quadratic():
+    """
+    Convenient symbolic definition of quadratic function
+    """
+    c, d, e = sym.symbols('c d e')
+    return c*t**2 + d*t + e
+
+
+def my_cubic():
+    """
+    Convenient symbolic definition of cubic function
+    """
+    a0, a1, a2, a3 = sym.symbols('a0 a1 a2 a3')
+    return a3*t**3 + a2*t**2 + a1*t + a0
+    
+
 # def quadratic():
 #     main(lambda t: b*t**2 + c*t + d)
 
 if __name__ == '__main__':
-    linear()
+    a = my_linear()
+    main(a)
+    b = my_quadratic()
+    main(b)
+    c = my_cubic()
+    main(c)
