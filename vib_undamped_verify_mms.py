@@ -18,11 +18,14 @@ def residual_discrete_eq(u):
 
 def residual_discrete_eq_step1(u):
     """Return the residual of the discrete eq. at the first
-    step with u inserted."""
+    step with u inserted.
+    Careful to evaluate everything around t=0"""
     f = ode_source_term(u)      # source term
-    numer = u.subs(t, t + dt)*(1 - 2*dt*V) - 2*u
-    # numer is the numerator in the discrete second derivative,
+    V = sym.diff(u, t)
+    V = V.subs(t, 0)
     # V is the initial condition on first derivative and replaces u(0-dt)
+    numer = 2*u.subs(t, 0+dt)*(1 - dt*V) - 2*u.subs(t, 0)
+    # numer is the numerator in the discrete second derivative,
     R = numer/(dt**2) + u.subs(t, 0)*w**2 - f.subs(t, 0)
     return sym.simplify(R)
 
@@ -59,11 +62,12 @@ def main(u):
     """
     print '=== Testing exact solution: %s ===' % u
     print "Initial conditions u(0)=%s, u'(0)=%s:" % \
-          (u(t).subs(t, 0), sym.diff(u(t), t).subs(t, 0))
+          (u.subs(t, 0), sym.diff(u, t).subs(t, 0))
 
     # Method of manufactured solution requires fitting f
     global f  # source term in the ODE
-    f = sym.simplify(ode_lhs(u))
+    # f = sym.simplify(ode_lhs(u))
+    f = sym.simplify(ode_source_term(u))
 
     # Residual in discrete equations (should be 0)
     print 'residual step1:', residual_discrete_eq_step1(u)
