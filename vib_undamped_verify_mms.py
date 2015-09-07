@@ -124,8 +124,9 @@ def solver(u0, up0, omega, deltaT, T, f):
 
     u[0] = u0                   # first value
 
-    u[1] = 0.5*(u[0]*(2 - (deltaT**2)*(omega**2)) + 2*deltaT*up0 +
-                f(0)*deltaT**2)  # first iteration
+    # u[1] = 0.5*(u[0]*(2 - (deltaT**2)*(omega**2)) + 2*deltaT*up0 +
+    #             f(0)*deltaT**2)  # first iteration
+    u[1] = u[0]*(1 - 0.5*(deltaT*omega)**2) + deltaT*up0 + 0.5*deltaT**2*f(0)
     for n in xrange(1, Nt):     # remaining iterations
         u[n+1] = u[n]*(2 - (deltaT*omega)**2) - u[n-1] + f(t[n])*deltaT**2
     return u, t
