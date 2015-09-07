@@ -91,12 +91,9 @@ if __name__ == '__main__':
     c = my_cubic()              # to test polynomial of degree 3
     main(c)
 
-
-def numeric_linear(c, d, t):
-    """
-    Retruns c*t + d where all inputs are numbers
-    """
-    return c*t + d
+    import nose
+    print '==== Running nose test on solver ===='
+    # nose.main('vib_undamped_verify_mms')
 
 
 def solver(u0, up0, omega, deltaT, T, f):
@@ -130,3 +127,11 @@ def solver(u0, up0, omega, deltaT, T, f):
     for n in xrange(1, Nt):     # remaining iterations
         u[n+1] = u[n]*(2 - (deltaT*omega)**2) - u[n-1] + f(t[n])*deltaT**2
     return u, t
+
+
+def test_solver(tol=1e-14):
+    """
+    Function to test solver with source term from linear equation
+    """
+    assert 1 == 1.0
+    assert 1 == 2
