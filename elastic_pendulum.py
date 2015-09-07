@@ -40,7 +40,8 @@ mass, gravity and spring constant
 
     def angle(x, y):
         """Convenient angle, not used much"""
-        return np.arctan2(y, x)
+        return np.arctan2(x, -y)
+        # return np.arctan(float(x)/y)
 
     # calculat at time step 1
     x[1] = x[0] + 0.5*gamma*(dt**2)*(1 - beta/length(x[0], y[0]))*x[0]
@@ -78,10 +79,10 @@ mass, gravity and spring constant
         if abs(Theta) < 10*np.pi/180:
             # Compare theta and theta_e for small angles (<10 degrees)
             theta_e = Theta*np.cos(omega*t)  # non-elastic scaled sol.
-            plt.figure()
+            plt.figure(2)
             plt.plot(t, theta, label='Theta elastic')
             plt.plot(t, theta_e, label='Theta non-elastic')
-            plt.title('Elastic vs non-elastic pendulum for $\beta=$%g' % beta)
+            plt.title('Elastic vs non-elastic pendulum for $\\beta=$%g' % beta)
             plt.ylabel('Degrees')
             plt.xlabel('Time')
             plt.savefig('tmp_compare.png')
