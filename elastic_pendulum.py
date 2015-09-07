@@ -1,7 +1,6 @@
 import numpy as np
-import scitools.std as plt
-# import matplotlib.pyplot as plt
-import odespy
+# import scitools.std as plt
+import matplotlib.pyplot as plt
 
 
 def simulate(beta=0.9, Theta=30, epsilon=0, num_periods=6,
@@ -16,64 +15,80 @@ mass, gravity and spring constant
     time_steps_per_period - time step resolution
     plots - if == True plots are made and shown
     """
-    from math import sin, cos, pi
     Theta = Theta*np.pi/180     # convert theta to radians
-
-    # Initial position and velocity
-    # (we order the equations such that Euler-Cromer in odespy
-    # can be used, i.e., vx, x, vy, y)
-    ic = [0,                            # x'=vx
-          (1 + epsilon)*sin(Theta),     # x
-          0,                            # y'=vy
-          1 - (1 + epsilon)*cos(Theta),  # y
-          ]
-
-    def f(u, t, beta):
-        vx, x, vy, y = u
-        L = np.sqrt(x**2 + (y-1)**2)
-        h = beta/(1-beta)*(1 - beta/L)  # help factor
-        return [-h*x, vx, -h*(y-1) - beta, vy]
-    # Non-elastic pendulum (scaled similarly in the limit beta=1)
-    # solution Theta*cos(t)
-    P = 2*pi
-    dt = P/time_steps_per_period
+    # initialize vectors for x, y, theta, t
+    P = 2*np.pi                 # period
+    dt = P/time_steps_per_period  # P is always float because of pi
     T = num_periods*P
-    omega = 2*pi/P
-    time_points = np.linspace(
-        0, T, num_periods*time_steps_per_period+1)
+    t = np.arange(0, T+dt, dt)    # T+dt because end is exclusive
+    x = np.zeros_like(t)
+    y = np.zeros_like(t)
+    theta = np.zeros_like(t)
 
-    solver = odespy.EulerCromer(f, f_args=(beta,))
-    solver.set_initial_condition(ic)
-    u, t = solver.solve(time_points)
-    x = u[:, 1]
-    y = u[:, 3]
-    theta = np.arctan(x/(1-y))
+    # initial condition for x, y and theta
+    x[0] = (1 + epsilon)*np.sin(theta)
+    y[0] = 1 - (1 + epsilon)*np.cos(theta)
+    theta[0] = Theta
 
+    # define convenient functions and constant
+    gamma = float(beta)/(1 - beta)  # constant
+    omega = 2*np.pi/P
+
+    def length(x, y):
+        """Convenient length measure"""
+        return float(np.sqrt(x**2 + (y - 1)**2))
+
+    def angle(x, y):
+        """Convenient angle, not used much"""
+        return np.arctan2(float(x)/y)
+
+    # calculat at time step 1
+    x[1] = x[0] + 0.5*gamma*(dt**2)*(1 - beta/length(x[0], y[0]))*x[0]
+    y[1] = y[0] + 0.5*gamma*(dt**2)*((1 - beta/length(x[0], y[0]))*(y[0] - 1)
+                                     - beta)
+    theta[1] = angle(x[1], y[1])
+    # solve for remaining time steps
+    for n in xrange(1, len(t)):
+        x[n+1] = 2*x[n] - x[n-1] + (dt**2)*gamma*(1 -
+                                                  (beta/length(x[n],
+                                                               y[n])))*x[n]
+        y[n+1] = 2*y[n] - y[n-1] + (dt**2)*(gamma *
+                                            (1 - (beta/length(x[n], y[n])))
+                                            * (y[n] - 1) - beta)
+        theta[n] = angle(x[n], y[n])
+    # start plotting
     if plot:
-        plt.figure()
-        plt.plot(x, y, 'b-', title='Pendulum motion',
-                 daspect=[1, 1, 1], daspectmode='equal',
-                 axis=[x.min(), x.max(), 1.3*y.min(), 1])
-        # plt.plot(x, y, 'b-')
-        # plt.title('Pendulum motion')
-        # plt.xlim(x.min(), x.max())
-        # plt.ylim(1.3*y.min(), 1)
-        # plt.axis('equal')
+        plt.figure(0)
+        # plt.plot(x, y, 'b-', title='Pendulum motion',
+        #          daspect=[1, 1, 1], daspectmode='equal',
+        #          axis=[x.min(), x.max(), 1.3*y.min(), 1])
+        plt.plot(x, y, 'b-')
+        plt.title('Pendulum motion')
+        plt.xlim(x.min(), x.max())
+        plt.ylim(1.3*y.min(), 1)
+        plt.axis('equal')
         plt.savefig('tmp_xy.png')
         plt.savefig('tmp_xy.pdf')
         # Plot theta in degrees
         plt.figure()
-        plt.plot(t, theta*180/np.pi, 'b-',
-                 title='Angular displacement in degrees')
+        plt.plot(t, theta*180/np.pi, 'b-')
+        plt.title('Angular displacement in degrees')
+        plt.ylabel('Degrees')
+        plt.xlabel('Time')
         plt.savefig('tmp_theta.png')
         plt.savefig('tmp_theta.pdf')
-        if abs(Theta) < 10*pi/180:
+        if abs(Theta) < 10*np.pi/180:
             # Compare theta and theta_e for small angles (<10 degrees)
             theta_e = Theta*np.cos(omega*t)  # non-elastic scaled sol.
             plt.figure()
-            plt.plot(t, theta, t, theta_e,
-                     legend=['theta elastic', 'theta non-elastic'],
-                     title='Elastic vs non-elastic pendulum, \beta=%g' % beta)
+            plt.plot(t, theta, label='Theta elastic')
+            plt.plot(t, theta_e, label='Theta non-elastic')
+            plt.title('Elastic vs non-elastic pendulum for $\beta=$%g' % beta)
+            # plt.plot(t, theta, t, theta_e,
+            #          legend=['theta elastic', 'theta non-elastic'],
+            #         title='Elastic vs non-elastic pendulum, \beta=%g' % beta)
+            plt.ylabel('Degrees')
+            plt.xlabel('Time')
             plt.savefig('tmp_compare.png')
             plt.savefig('tmp_compare.pdf')
         # Plot y vs x (the real physical motion)
