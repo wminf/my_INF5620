@@ -40,8 +40,8 @@ mass, gravity and spring constant
 
     def angle(x, y):
         """Convenient angle, not used much"""
-        return np.arctan2(x, -y)
-        # return np.arctan(float(x)/y)
+        # return np.arctan2(x, -y)
+        return np.arctan(float(x)/y)*(abs(x)/x)
 
     # calculat at time step 1
     x[1] = x[0] + 0.5*gamma*(dt**2)*(1 - beta/length(x[0], y[0]))*x[0]
@@ -53,8 +53,8 @@ mass, gravity and spring constant
         x[n+1] = 2*x[n] - x[n-1] + (dt**2)*gamma*(1 -
                                                   (beta/length(x[n],
                                                                y[n])))*x[n]
-        y[n+1] = 2*y[n] - y[n-1] + (dt**2)*(gamma *
-                                            (1 - (beta/length(x[n], y[n])))
+        y[n+1] = 2*y[n] - y[n-1] + (dt**2)*(gamma*(1 - (beta/length(x[n],
+                                                                    y[n])))*(y[n] - 1
                                             * (y[n] - 1) - beta)
         theta[n] = angle(x[n], y[n])
     # start plotting
