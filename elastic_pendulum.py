@@ -53,10 +53,10 @@ mass, gravity and spring constant
         x[n+1] = 2*x[n] - x[n-1] + (dt**2)*gamma*(1 -
                                                   (beta/length(x[n],
                                                                y[n])))*x[n]
-        y[n+1] = 2*y[n] - y[n-1] + (dt**2)*(gamma*(1 - (beta/length(x[n],
-                                                                    y[n])))*(y[n] - 1
-                                            * (y[n] - 1) - beta)
+        y[n+1] = 2*y[n] - y[n-1] - beta*dt**2 + (dt**2)*gamma*(1 - (beta/length(x[n], y[n])))*(y[n] - 1)
+
         theta[n] = angle(x[n], y[n])
+    theta[-1] = angle(x[-1], y[-1])
     # start plotting
     if plot:
         plt.figure(0)
