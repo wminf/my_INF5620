@@ -1,4 +1,5 @@
 import sympy as sym
+import matplotlib.pyplot as plt
 import numpy as np
 V, t, I, w, dt = sym.symbols('V t I w dt')  # global symbols
 f = None  # global variable for the source term in the ODE
@@ -93,7 +94,7 @@ if __name__ == '__main__':
 
     import nose
     print '==== Running nose test on solver ===='
-    # nose.main('vib_undamped_verify_mms')
+    # nose.main('vib_undamped_verify_mms')es
 
 
 def solver(u0, up0, omega, deltaT, T, f):
@@ -117,7 +118,7 @@ def solver(u0, up0, omega, deltaT, T, f):
     deltaT = float(deltaT)      # to avoid integer division problems
     Nt = int(round(T/deltaT))   # number of time steps
     u = np.zeros(Nt + 1)        # empty vector for u values
-    t = np.linspace(0, Nt*dt, Nt+1)  # time mesh
+    t = np.linspace(0, Nt*deltaT, Nt+1)  # time mesh
 
     u[0] = u0                   # first value
 
@@ -133,5 +134,20 @@ def test_solver(tol=1e-14):
     """
     Function to test solver with source term from linear equation
     """
-    assert 1 == 1.0
-    assert 1 == 2
+    def source(t):
+        w = 2
+        c = 0.5
+        d = 1
+        return (c*t + d)*w**2
+    w = 1
+    c = 0.5
+    d = 1
+    uans, tans = solver(1, 1, w, 0.01, 2, source)
+    ref = source(2)
+    try:
+        assert abs(uans[-1] - ref) < tol
+    except AssertionError:
+        print uans[-1], ref, abs(uans[-1] - ref)
+        plt.plot(tans, uans)
+        plt.show()
+
