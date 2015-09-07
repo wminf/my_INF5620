@@ -1,4 +1,5 @@
 import sympy as sym
+import numpy as np
 V, t, I, w, dt = sym.symbols('V t I w dt')  # global symbols
 f = None  # global variable for the source term in the ODE
 
@@ -24,7 +25,7 @@ def residual_discrete_eq_step1(u):
     V = sym.diff(u, t)
     V = V.subs(t, 0)
     # V is the initial condition on first derivative and replaces u(0-dt)
-    numer = 2*u.subs(t, 0+dt)*(1 - dt*V) - 2*u.subs(t, 0)
+    numer = 2*(u.subs(t, dt) - u.subs(t, 0) - dt*V)
     # numer is the numerator in the discrete second derivative,
     R = numer/(dt**2) + u.subs(t, 0)*w**2 - f.subs(t, 0)
     return sym.simplify(R)
@@ -58,10 +59,6 @@ def main(u):
     print 'residual:', residual_discrete_eq(u)
 
 
-def linear():
-    main(lambda t: V*t + I)
-
-
 def my_linear():
     """
     Convenient symbolic definition of straight line
@@ -84,15 +81,51 @@ def my_cubic():
     """
     a0, a1, a2, a3 = sym.symbols('a0 a1 a2 a3')
     return a3*t**3 + a2*t**2 + a1*t + a0
-    
 
-# def quadratic():
-#     main(lambda t: b*t**2 + c*t + d)
 
 if __name__ == '__main__':
     a = my_linear()
     main(a)
     b = my_quadratic()
     main(b)
-    c = my_cubic()
+    c = my_cubic()              # to test polynomial of degree 3
     main(c)
+
+
+def numeric_linear(c, d, t):
+    """
+    Retruns c*t + d where all inputs are numbers
+    """
+    return c*t + d
+
+
+def solver(u0, up0, omega, deltaT, T, f):
+    """Solver for the problem u'' + u*omega**2 = f where u and f are
+    functions of time t. Different symbols are used to avoid confusion
+    with preceding sympy code.
+    u0     = I  = Initial u value
+    up0    = V  = u' at t=0
+    omega  = w  = frequency
+    deltaT = dt = size of time step
+         T = End time of simulation
+         f = f(t) = forcing function depenent on time in numerical form
+    """
+    if T < deltaT:              # short check of input variable
+        raise ValueError("End time T can't be less than time step size deltaT")
+    if T < 0:
+        raise ValueError("End time T can't be less than 0")
+    if T == 0:
+        return u0
+
+    deltaT = float(deltaT)      # to avoid integer division problems
+    Nt = int(round(T/deltaT))   # number of time steps
+    u = np.zeros(Nt + 1)        # empty vector for u values
+    t = np.linspace(0, Nt*dt, Nt+1)  # time mesh
+
+    u[0] = u0                   # first value
+
+    u[1] = 0.5*(u[0]*(2 - (deltaT**2)*(omega**2)) + 2*deltaT*up0 +
+                f(0)*deltaT**2)  # first iteration
+    for n in xrange(1, Nt):     # remaining iterations
+        u[n+1] = u[n]*(2 - (deltaT*omega)**2) - u[n-1] + f(t[n])*deltaT**2
+    return u, t
