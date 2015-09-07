@@ -135,15 +135,17 @@ def test_solver(tol=1e-14):
     Function to test solver with source term from linear equation
     """
     def source(t):
-        w = 2
-        c = 0.5
-        d = 1
-        return (c*t + d)*w**2
-    w = 1
-    c = 0.5
-    d = 1
-    uans, tans = solver(1, 1, w, 0.01, 2, source)
-    ref = source(2)
+        w = 1.25
+        c = 2
+        d = 3
+        e = 4
+        return 2*c + (c*t**2 + d*t + e)*w**2
+    w = 1.25
+    e = 4
+    d = 3
+    time = 15
+    uans, tans = solver(e, d, w, 0.01, time, source)
+    ref = source(time)
     try:
         assert abs(uans[-1] - ref) < tol
     except AssertionError:
