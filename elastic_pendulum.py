@@ -20,14 +20,14 @@ mass, gravity and spring constant
     P = 2*np.pi                 # period
     dt = P/time_steps_per_period  # P is always float because of pi
     T = num_periods*P
-    t = np.arange(0, T+dt, dt)    # T+dt because end is exclusive
+    t = np.arange(0, T, dt)  # T+dt because end is exclusive
     x = np.zeros_like(t)
     y = np.zeros_like(t)
     theta = np.zeros_like(t)
 
     # initial condition for x, y and theta
-    x[0] = (1 + epsilon)*np.sin(theta)
-    y[0] = 1 - (1 + epsilon)*np.cos(theta)
+    x[0] = (1 + epsilon)*np.sin(Theta)
+    y[0] = 1 - (1 + epsilon)*np.cos(Theta)
     theta[0] = Theta
 
     # define convenient functions and constant
@@ -40,7 +40,7 @@ mass, gravity and spring constant
 
     def angle(x, y):
         """Convenient angle, not used much"""
-        return np.arctan2(float(x)/y)
+        return np.arctan2(y, x)
 
     # calculat at time step 1
     x[1] = x[0] + 0.5*gamma*(dt**2)*(1 - beta/length(x[0], y[0]))*x[0]
@@ -48,7 +48,7 @@ mass, gravity and spring constant
                                      - beta)
     theta[1] = angle(x[1], y[1])
     # solve for remaining time steps
-    for n in xrange(1, len(t)):
+    for n in xrange(1, len(t)-1):
         x[n+1] = 2*x[n] - x[n-1] + (dt**2)*gamma*(1 -
                                                   (beta/length(x[n],
                                                                y[n])))*x[n]
@@ -59,9 +59,6 @@ mass, gravity and spring constant
     # start plotting
     if plot:
         plt.figure(0)
-        # plt.plot(x, y, 'b-', title='Pendulum motion',
-        #          daspect=[1, 1, 1], daspectmode='equal',
-        #          axis=[x.min(), x.max(), 1.3*y.min(), 1])
         plt.plot(x, y, 'b-')
         plt.title('Pendulum motion')
         plt.xlim(x.min(), x.max())
@@ -69,8 +66,9 @@ mass, gravity and spring constant
         plt.axis('equal')
         plt.savefig('tmp_xy.png')
         plt.savefig('tmp_xy.pdf')
+
         # Plot theta in degrees
-        plt.figure()
+        plt.figure(1)
         plt.plot(t, theta*180/np.pi, 'b-')
         plt.title('Angular displacement in degrees')
         plt.ylabel('Degrees')
@@ -84,13 +82,11 @@ mass, gravity and spring constant
             plt.plot(t, theta, label='Theta elastic')
             plt.plot(t, theta_e, label='Theta non-elastic')
             plt.title('Elastic vs non-elastic pendulum for $\beta=$%g' % beta)
-            # plt.plot(t, theta, t, theta_e,
-            #          legend=['theta elastic', 'theta non-elastic'],
-            #         title='Elastic vs non-elastic pendulum, \beta=%g' % beta)
             plt.ylabel('Degrees')
             plt.xlabel('Time')
             plt.savefig('tmp_compare.png')
             plt.savefig('tmp_compare.pdf')
+        plt.show()            # for testing
         # Plot y vs x (the real physical motion)
         return x, y, theta, t
 
@@ -119,11 +115,10 @@ def test_vertical_motion():
     n = 600
     time_steps_per_period = omega*n
     y_exact = lambda t: -0.1*np.cos(omega*t)
-    x, y, theta, t = simulate(
-        beta=beta, Theta=0, epsilon=0.1,
-        num_periods=num_periods,
-        time_steps_per_period=time_steps_per_period,
-        plot=False)
+    x, y, theta, t = simulate(beta, 0, 0.1,
+                              num_periods,
+                              time_steps_per_period,
+                              False)
     tol = 0.00055              # ok tolerance for the above resolution
     # No motion in x direction is epxected
     assert np.abs(x.max()) < tol
@@ -131,7 +126,10 @@ def test_vertical_motion():
     y_e = y_exact(t)
     diff = np.abs(y_e - y).max()
     if diff > tol:              # plot
-        plt.plot(t, y, t, y_e, legend=['y', 'exact'])
+        plt.plot(t, y, label='y calculated')
+        plt.plot(t, y_e, label='exact')
+        plt.legend(loc='best')
+        plt.show()
         raw_input('Error in test_vertical_motion; type CR:')
         assert diff < tol, 'diff=%g' % diff
 
